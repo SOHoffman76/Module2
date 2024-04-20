@@ -1,0 +1,128 @@
+Sub Module2Challenge()
+    
+    ' Create variables
+    Dim ws As Worksheet
+    Dim row As Long
+    Dim Output_Table_Row As Integer
+    Dim lastrow As Long
+    Dim counter As Integer
+    
+    Dim Ticker As String
+    Dim YearOpenPrice As Double
+    Dim YearClosePrice As Double
+    Dim YearlyChange As Double
+    Dim PercentChange As Double
+    Dim TotalStockVolume As Double
+    
+    Dim max_increase As Double
+    Dim max_decrease As Double
+    Dim max_volume As Double
+    Dim max_increase_ticker As String
+    Dim max_decrease_ticker As String
+    Dim max_volume_ticker As String
+    
+    ' Set up the workbook
+    For Each ws In ThisWorkbook.Worksheets
+        
+    TotalStockVolume = 0
+    Output_Table_Row = 2
+    
+    ' Create Coumns
+    ws.Range("I1").EntireColumn.Insert
+    ws.Range("J1").EntireColumn.Insert
+    ws.Range("K1").EntireColumn.Insert
+    ws.Range("L1").EntireColumn.Insert
+        
+    ' Set headers and confirm formatting
+    ws.Range("I1").Value = "Ticker"
+    ws.Range("J1").Value = "Yearly Change"
+    ws.Range("K1").Value = "Percent Change"
+    ws.Range("L1").Value = "Total Stock Volume"
+    ws.Range("O2").Value = "Greatest % Increase"
+    ws.Range("O3").Value = "Greatest % Decrease"
+    ws.Range("O4").Value = "Greatest Total Volume"
+    ws.Range("P1").Value = "Ticker"
+    ws.Range("Q1").Value = "Value"
+        
+    lastrow = ws.Cells(ws.Rows.Count, 1).End(xlUp).row
+
+        ' Loop through each row to calculate yearly change and percentage change
+        For row = 2 To lastrow
+
+            If ws.Cells(row + 1, 1).Value <> ws.Cells(row, 1).Value Then
+                
+                ' Fill in ticker name
+                Ticker = ws.Cells(row, 1).Value
+                
+                ' Calculate Closing Price
+                YearClosePrice = ws.Cells(row, 6).Value
+                
+                ' Calculate Yearly Change
+                YearlyChange = YearClosePrice - YearOpenPrice
+                
+                ' Avoid division by zero error
+                If YearOpenPrice <> 0 Then
+                    PercentChange = (YearlyChange / YearOpenPrice)
+                Else
+                    PercentChange = 0
+                End If
+                
+                ' Output values to worksheet
+                ws.Range("I" & Output_Table_Row).Value = Ticker
+                ws.Range("J" & Output_Table_Row).Value = YearlyChange
+                ws.Range("K" & Output_Table_Row).NumberFormat = "0.00%" ' Set percentage format
+                ws.Range("K" & Output_Table_Row).Value = PercentChange
+                ws.Range("L" & Output_Table_Row).Value = TotalStockVolume
+                
+                Output_Table_Row = Output_Table_Row + 1
+                TotalStockVolume = 0 ' Reset TotalVolume for the next ticker
+                counter = 0 ' Reset counter for calculating yearly change
+            Else
+            
+                ' Add to total volume
+                TotalStockVolume = TotalStockVolume + ws.Cells(row, 7).Value
+                
+                ' Calculate opening price for ticker
+                Do Until counter = 1
+                    YearOpenPrice = ws.Cells(row, 3).Value
+                    YearOpenPrice = YearOpenPrice
+                    counter = 1
+                Loop
+                
+            End If
+            
+            ' Check for greatest % increase, greatest % decrease, and greatest total volume
+            If PercentChange > max_increase Then
+                max_increase = PercentChange
+                max_increase_ticker = Ticker
+            ElseIf PercentChange < max_decrease Then
+                max_decrease = PercentChange
+                max_decrease_ticker = Ticker
+            End If
+            
+            If TotalStockVolume > max_volume Then
+                max_volume = TotalStockVolume
+                max_volume_ticker = Ticker
+            End If
+        Next row
+        
+        ' Output greatest increase and decrease ticker and values to worksheet
+        ws.Range("P2").Value = max_increase_ticker
+        ws.Range("P3").Value = max_decrease_ticker
+        ws.Range("P4").Value = max_volume_ticker
+        ws.Range("Q2").Value = max_increase
+        ws.Range("Q2").NumberFormat = "0.00%" ' Set percentage format
+        ws.Range("Q3").Value = max_decrease
+        ws.Range("Q3").NumberFormat = "0.00%" ' Set percentage format
+        ws.Range("Q4").Value = max_volume
+        
+        ' Color cells in column J based on their values
+        For row = 2 To lastrow
+            If ws.Cells(row, 10).Value >= 0 Then
+                ws.Cells(row, 10).Interior.ColorIndex = 4 ' Green color
+            Else
+                ws.Cells(row, 10).Interior.ColorIndex = 3 ' Red color
+            End If
+        Next row
+    Next ws
+End Sub
